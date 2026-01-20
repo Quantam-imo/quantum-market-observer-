@@ -1,13 +1,33 @@
+
+from datetime import datetime
+
 class IcebergMemory:
-    """Maintains history of detected iceberg orders."""
-    
     def __init__(self):
-        self.icebergs = []
+        self.zones = []
+        self.levels = []  # For price-level memory
 
-    def add_iceberg(self, volume, level, timestamp):
-        """Record detected iceberg order."""
-        self.icebergs.append({"volume": volume, "level": level, "timestamp": timestamp})
+    def record_zone(self, zone):
+        self.zones.append({
+            "id": len(self.zones) + 1,
+            "price_low": zone["low"],
+            "price_high": zone["high"],
+            "side": zone["side"],  # BUY or SELL
+            "session": zone["session"],
+            "timestamp": datetime.utcnow(),
+            "outcome": None,
+            "score": 0.0
+        })
 
-    def get_recent(self, bars=50):
-        """Retrieve recent iceberg activity."""
-        return self.icebergs[-bars:] if len(self.icebergs) > 0 else []
+    def store(self, price_from, price_to, side, session):
+        self.levels.append({
+            "from": price_from,
+            "to": price_to,
+            "side": side,
+            "session": session
+        })
+
+    def update_outcome(self, zone_id, outcome):
+        for z in self.zones:
+            if z["id"] == zone_id:
+                z["outcome"] = outcome
+                z["score"] += 1 if outcome == "SUCCESS" else -1

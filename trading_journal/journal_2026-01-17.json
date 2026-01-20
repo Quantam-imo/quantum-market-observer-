@@ -1,0 +1,39 @@
+[
+  {
+    "timestamp": "2026-01-17T23:58:14.187436",
+    "data": {
+      "entry_time": "14:35 GMT",
+      "exit_time": "14:52 GMT",
+      "direction": "SELL",
+      "entry_price": 3366,
+      "exit_price": 3346,
+      "stop_loss": 3374,
+      "take_profit_1": 3346,
+      "take_profit_2": 3328,
+      "r_multiple": 2.8,
+      "result": "WIN",
+      "setup_type": "NY_PREMIUM_SWEEP",
+      "ai_confidence": 0.82,
+      "execution_notes": "Perfect execution, no fear"
+    }
+  },
+  {
+    "timestamp": "2026-01-17T23:58:14.187697",
+    "data": {
+      "entry_time": "15:10 GMT",
+      "exit_time": "15:22 GMT",
+      "direction": "BUY",
+      "entry_price": 3350,
+      "exit_price": 3348,
+      "stop_loss": 3345,
+      "take_profit_1": 3360,
+      "take_profit_2": 3370,
+      "r_multiple": -1.0,
+      "result": "LOSS",
+      "setup_type": "CHOP_ZONE",
+      "ai_confidence": 0.58,
+      "execution_notes": "Forced trade, should have waited",
+      "failure_reason": "ENTERED_OUTSIDE_CONFLUENCE"
+    }
+  }
+]

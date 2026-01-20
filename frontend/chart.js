@@ -1,83 +1,87 @@
-import { createChart } from "https://unpkg.com/lightweight-charts/dist/lightweight-charts.esm.production.js";
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
 
-/* ============================
-   CHART INITIALIZATION
-   ============================ */
+canvas.width = window.innerWidth * 0.75;
+canvas.height = window.innerHeight * 0.9;
 
-const chart = createChart(document.getElementById("chart"), {
-    layout: {
-        background: { color: "#0B0F14" },
-        textColor: "#D9DEE7",
-        fontFamily: "Inter, sans-serif"
-    },
-    grid: {
-        vertLines: { color: "#1F2A38" },
-        horzLines: { color: "#1F2A38" }
-    },
-    rightPriceScale: {
-        borderColor: "#1F2A38"
-    },
-    timeScale: {
-        borderColor: "#1F2A38",
-        timeVisible: true,
-        secondsVisible: false
-    },
-    crosshair: {
-        mode: 1
-    }
-});
+let bars = [];
 
-/* ============================
-   PRICE SERIES
-   ============================ */
+async function fetchData() {
+    const res = await fetch("http://127.0.0.1:8000/status");
+    const data = await res.json();
 
-const candleSeries = chart.addCandlestickSeries({
-    upColor: "#26A69A",
-    downColor: "#EF5350",
-    borderUpColor: "#26A69A",
-    borderDownColor: "#EF5350",
-    wickUpColor: "#26A69A",
-    wickDownColor: "#EF5350"
-});
+    if (!data.price) return;
 
-/* ============================
-   LOAD PRICE DATA
-   (Replace with live CME feed)
-   ============================ */
-
-fetch("/api/price")
-    .then(res => res.json())
-    .then(data => {
-        candleSeries.setData(data);
+    bars.push({
+        price: data.price,
+        buys: data.orderflow.buys,
+        sells: data.orderflow.sells,
+        iceberg: data.iceberg,
+        decision: data.decision,
+        narrative: data.narrative
     });
 
-/* ============================
-   GANN LEVELS
-   ============================ */
+    if (bars.length > 60) bars.shift();
 
-function drawGannLevel(price, label) {
-    const line = chart.addLineSeries({
-        color: "#FFD54F",
-        lineWidth: 1,
-        lineStyle: 2
-    });
-    line.setData([
-        { time: 0, value: price },
-        { time: 9999999999, value: price }
-    ]);
+    updateMentor(data);
+    draw();
 }
 
-/* Example */
-drawGannLevel(3369, "200% Range");
-drawGannLevel(3326, "Equilibrium");
+function updateMentor(data) {
+    document.getElementById("mentorText").innerText =
+        data.narrative || "Monitoring market...";
 
-/* ============================
-   ICEBERG / ABSORPTION ZONES
-   ============================ */
+    document.getElementById("confidence").innerText =
+        data.decision
+            ? `Decision: ${data.decision.decision} (${data.decision.confidence}%)`
+            : "";
+}
 
-function drawIcebergZone(fromPrice, toPrice, fromTime, toTime) {
-    chart.addPriceLine({
-        price: fromPrice,
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const maxQty = Math.max(...bars.map(b => Math.max(b.buys, b.sells)), 1);
+    const priceMin = Math.min(...bars.map(b => b.price));
+    const priceMax = Math.max(...bars.map(b => b.price));
+
+    const barWidth = canvas.width / bars.length;
+
+    bars.forEach((b, i) => {
+        const x = i * barWidth + barWidth / 2;
+
+        // PRICE SCALE
+        const y =
+            canvas.height -
+            ((b.price - priceMin) / (priceMax - priceMin + 0.01)) *
+                (canvas.height * 0.6) -
+            50;
+
+        // BUY QTY BAR
+        const buyH = (b.buys / maxQty) * 80;
+        ctx.fillStyle = "#2ea043";
+        ctx.fillRect(x - 6, canvas.height - buyH, 5, buyH);
+
+        // SELL QTY BAR
+        const sellH = (b.sells / maxQty) * 80;
+        ctx.fillStyle = "#f85149";
+        ctx.fillRect(x + 1, canvas.height - sellH, 5, sellH);
+
+        // PRICE DOT
+        ctx.fillStyle = "#e6e6e6";
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ICEBERG MARKER
+        if (b.iceberg) {
+            ctx.fillStyle = "#ff9f1c";
+            ctx.fillRect(x - 4, y - 14, 8, 8);
+        }
+    });
+}
+
+// REFRESH SPEED (IMPORTANT)
+setInterval(fetchData, 1000); // 🔥 1s = institutional speed
         color: "rgba(255, 82, 82, 0.35)",
         lineWidth: 0,
         axisLabelVisible: false

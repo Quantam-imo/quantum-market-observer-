@@ -1,12 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>AI Mentor Panel</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Quantum Market Observer</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>AI Mentor – Institutional View</h1>
-  <div id="panel"></div>
-  <script src="app.js"></script>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <h1>Quantum Market Observer</h1>
+    <span>XAUUSD · Institutional View</span>
+  </header>
+
+  <!-- MAIN GRID -->
+  <div id="layout">
+
+    <!-- CHART -->
+    <canvas id="chart"></canvas>
+
+    <!-- AI MENTOR PANEL -->
+    <div id="mentor">
+      <h2>AI Mentor</h2>
+      <div id="mentorText">Waiting for market structure...</div>
+      <div id="confidence"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="chart.js"></script>
 </body>
 </html>

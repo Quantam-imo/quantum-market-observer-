@@ -1,0 +1,21 @@
+[
+  {
+    "timestamp": "2026-01-24T01:52:43.090488",
+    "data": {
+      "entry_time": "2026-01-24T01:52:44.442Z",
+      "exit_time": null,
+      "direction": "LONG",
+      "entry_price": 2650.0,
+      "exit_price": null,
+      "stop_loss": 2645.0,
+      "take_profit_1": 2660.0,
+      "take_profit_2": null,
+      "r_multiple": null,
+      "result": null,
+      "setup_type": "ICEBERG_ABSORPTION",
+      "ai_confidence": 85.0,
+      "execution_notes": "Manual test trade",
+      "failure_reason": null
+    }
+  }
+]

@@ -33,9 +33,10 @@ class IcebergDetector:
     
     def __init__(self):
         self.absorption_zones = {}  # price -> {volume, count, direction}
-        self.volume_threshold = 500  # Contracts (tune per market)
+        self.volume_threshold = 50  # Contracts (lowered for faster detection)
         self.price_bucket = 0.5  # Round to nearest 0.5
         self.history = []  # Track all detections
+        self.last_detection_time = None  # Track last detection for real-time updates
         
     def detect_absorption_zones(self, trades: List[Dict]) -> List[Dict]:
         """
@@ -59,8 +60,8 @@ class IcebergDetector:
         avg_volume = sum(price_buckets.values()) / len(price_buckets) if price_buckets else 0
         
         for price, volume in price_buckets.items():
-            # Volume > 3x average = potential absorption
-            if volume > max(self.volume_threshold, avg_volume * 3):
+            # Volume > 1.5x average = potential absorption (more sensitive)
+            if volume > max(self.volume_threshold, avg_volume * 1.5):
                 
                 # Determine direction by analyzing nearby trades
                 direction = self._infer_direction(trades, price)

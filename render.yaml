@@ -1,0 +1,49 @@
+# Render Deployment Guide for quantum-market-observer
+
+## 1. Backend (FastAPI) - render.yaml
+
+services:
+  - type: web
+    name: quantum-backend
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: |
+      uvicorn backend.main:app --host 0.0.0.0 --port 10000
+    plan: free
+    envVars:
+      - key: ENV
+        value: production
+      # Add your API keys and secrets here
+
+## 2. Frontend (Static Site)
+# If your frontend is static HTML/JS/CSS in /frontend
+# You can deploy as a static site on Render
+# Or serve via FastAPI if integrated
+
+# Example for static site:
+# - type: static
+#   name: quantum-frontend
+#   staticPublishPath: frontend
+
+## 3. Background Worker (for live feeds, if needed)
+# If you need a persistent background process for data feeds:
+# - type: worker
+#   name: quantum-feed-worker
+#   env: python
+#   buildCommand: |
+#     pip install -r requirements.txt
+#   startCommand: |
+#     python backend/run_feed.py
+
+## 4. Environment Variables
+# Set all required API keys, secrets, and config in the Render dashboard or in the envVars section above.
+
+## 5. Deploy
+# 1. Push your repo to GitHub/GitLab.
+# 2. Create a new Web Service on Render, connect your repo, and select the render.yaml file.
+# 3. Add any additional services (static, worker) as needed.
+# 4. Set environment variables in the Render dashboard.
+# 5. Deploy!
+
+# For more details, see: https://render.com/docs/infrastructure-as-code

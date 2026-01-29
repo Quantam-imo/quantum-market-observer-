@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Data Test</title>
+    <style>
+        body { 
+            background: #0b0f14; 
+            color: #fff; 
+            font-family: monospace; 
+            padding: 20px;
+        }
+        .test-box {
+            background: #161b22;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        .status-connected { color: #3fb950; }
+        .status-disconnected { color: #f85149; }
+        .price-up { color: #3fb950; }
+        .price-down { color: #f85149; }
+    </style>
+</head>
+<body>
+    <h1>🔴 Live Data Integration Test</h1>
+    
+    <div class="test-box">
+        <h3>Connection Status</h3>
+        <p id="status">Connecting...</p>
+    </div>
+    
+    <div class="test-box">
+        <h3>Live Price</h3>
+        <p id="price" style="font-size: 24px;">$0.00</p>
+        <p id="change">Change: --</p>
+    </div>
+    
+    <div class="test-box">
+        <h3>Session</h3>
+        <p id="session">--</p>
+    </div>
+    
+    <div class="test-box">
+        <h3>Orderflow</h3>
+        <p id="orderflow">Buys: -- | Sells: --</p>
+    </div>
+    
+    <div class="test-box">
+        <h3>Last Update</h3>
+        <p id="lastUpdate">Never</p>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let lastPrice = null;
+        let lastUpdateTime = null;
+        
+        async function fetchLiveData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/status`);
+                if (!response.ok) throw new Error('Network error');
+                
+                const data = await response.json();
+                
+                // Update status
+                document.getElementById('status').innerHTML = 
+                    '<span class="status-connected">● CONNECTED</span>';
+                
+                // Update price with animation
+                const priceEl = document.getElementById('price');
+                const currentPrice = data.price;
+                priceEl.textContent = `$${currentPrice.toFixed(2)}`;
+                
+                if (lastPrice !== null) {
+                    priceEl.className = currentPrice > lastPrice ? 'price-up' : 'price-down';
+                    setTimeout(() => priceEl.className = '', 500);
+                    
+                    const change = currentPrice - lastPrice;
+                    document.getElementById('change').innerHTML = 
+                        `Change: <span class="${change >= 0 ? 'price-up' : 'price-down'}">
+                        ${change >= 0 ? '+' : ''}${change.toFixed(2)}</span>`;
+                }
+                lastPrice = currentPrice;
+                
+                // Update session
+                const sessionIcon = data.session === 'ASIA' ? '🌏' :
+                                   data.session === 'LONDON' ? '🇬🇧' :
+                                   data.session === 'NEWYORK' ? '🇺🇸' : '🌙';
+                document.getElementById('session').textContent = 
+                    `${sessionIcon} ${data.session}`;
+                
+                // Update orderflow
+                if (data.orderflow) {
+                    const delta = data.orderflow.buys - data.orderflow.sells;
+                    document.getElementById('orderflow').innerHTML = 
+                        `Buys: <span class="price-up">${data.orderflow.buys}</span> | ` +
+                        `Sells: <span class="price-down">${data.orderflow.sells}</span> | ` +
+                        `Delta: <span class="${delta > 0 ? 'price-up' : 'price-down'}">${delta}</span>`;
+                }
+                
+                // Update timestamp
+                lastUpdateTime = new Date();
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="status-disconnected">● DISCONNECTED</span>';
+            }
+        }
+        
+        // Update elapsed time display
+        setInterval(() => {
+            if (lastUpdateTime) {
+                const elapsed = Math.floor((new Date() - lastUpdateTime) / 1000);
+                document.getElementById('lastUpdate').textContent = 
+                    elapsed < 60 ? `${elapsed}s ago` : `${Math.floor(elapsed/60)}m ago`;
+            }
+        }, 1000);
+        
+        // Initial fetch and set interval
+        fetchLiveData();
+        setInterval(fetchLiveData, 5000);
+        
+        console.log('✅ Live data test initialized');
+    </script>
+</body>
+</html>

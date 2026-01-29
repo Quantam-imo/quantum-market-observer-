@@ -6,7 +6,7 @@ This is the institutional execution brain
 
 from backend.intelligence.absorption_engine import AbsorptionEngine
 from backend.intelligence.liquidity_sweep_engine import LiquiditySweepEngine
-from backend.memory.iceberg_memory import IcebergMemory
+from backend.memory.iceberg_memory import IcebergMemoryEngine
 from backend.intelligence.imo_engine import IMOEngine
 
 
@@ -19,7 +19,7 @@ class Step3IMOPipeline:
     def __init__(self):
         self.absorption = AbsorptionEngine(threshold=400)
         self.sweeps = LiquiditySweepEngine()
-        self.memory = IcebergMemory(session_limit=100)
+        self.memory = IcebergMemoryEngine()
         self.imo = IMOEngine()
         self.execution_log = []
     

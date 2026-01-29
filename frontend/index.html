@@ -2,36 +2,251 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quantum Market Observer</title>
+  <title>Gold Futures Live Chart</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <div id="app">
 
-  <!-- HEADER -->
+  <!-- TRADING TOOLBAR -->
   <header>
-    <h1>Quantum Market Observer</h1>
-    <span>XAUUSD · Institutional View</span>
+    <!-- Symbol & Price Section -->
+    <div class="header-section symbol-section">
+      <!-- Mini Price Chart -->
+      <canvas id="miniChart" width="120" height="35"></canvas>
+      <div class="connection-info">
+        <span class="status-dot status-connected" id="connectionStatus" title="Live"></span>
+        <span class="update-time" id="lastUpdate">connecting...</span>
+      </div>
+      <div class="live-indicator" id="dataSource">● LIVE</div>
+    </div>
+
+    <!-- Timeframe Dropdown (Compact) -->
+    <div class="header-section timeframe-section">
+      <select id="timeframeSelect" class="timeframe-select">
+        <option value="1m">1m</option>
+        <option value="5m" selected>5m</option>
+        <option value="15m">15m</option>
+        <option value="1H">1H</option>
+        <option value="4H">4H</option>
+        <option value="1D">1D</option>
+      </select>
+    </div>
+
+    <!-- Indicators Section -->
+    <div class="header-section indicators-section">
+      <button class="indicator-btn" data-indicator="volume" title="Volume">📊</button>
+      <button class="indicator-btn" data-indicator="vwap" title="VWAP">📈</button>
+      <button class="indicator-btn" data-indicator="volumeprofile" title="Volume Profile">📊</button>
+      <button class="indicator-btn" data-indicator="vp-legend" title="VP Legend Panel">📋</button>
+      <button class="indicator-btn" data-indicator="sessions" title="Session Markers">🕐</button>
+      <button class="indicator-btn" data-indicator="iceberg" title="Iceberg Zones">🧊</button>
+      <button class="indicator-btn" data-indicator="sweeps" title="Liquidity Sweeps">🌊</button>
+      <button class="indicator-btn" data-indicator="fvg" title="Fair Value Gaps">⬜</button>
+      <button class="indicator-btn" data-indicator="liquidity" title="Liquidity Pools">💧</button>
+      <button class="indicator-btn" data-indicator="htf" title="HTF Structure">📐</button>
+    </div>
+
+    <!-- View Controls Section -->
+    <div class="header-section view-section">
+      <button class="tool-btn" id="cursorOHLCBtn" title="Toggle Cursor OHLC Display">📋</button>
+      <button class="tool-btn" data-tool="orderflow" id="orderflowToggle" title="Toggle Iceberg Orderflow">🧊</button>
+      <button class="tool-btn" id="rawOrdersBtn" title="Toggle Raw Orders">📊</button>
+      <button class="tool-btn" id="orderflowVisBtn" title="Toggle ICT Indicator">ICT</button>
+      <button class="tool-btn" id="domLadderBtn" title="Show DOM Ladder Panel">🪜</button>
+      <button class="tool-btn" id="positionPanelBtn" title="Position Management">📍</button>
+      <button class="tool-btn" id="mentorToggleBtn" title="Toggle AI Mentor">🤖</button>
+      <button class="tool-btn" id="autoScrollToggle" title="Auto-scroll to new candles">📜</button>
+      <button class="tool-btn" id="priceScaleLockBtn" title="Lock Price Scale (L)">🔒</button>
+      <button class="tool-btn" data-tool="zoom" title="Zoom In">🔍+</button>
+      <button class="tool-btn" data-tool="zoomout" title="Zoom Out">🔍-</button>
+      <button class="tool-btn" id="themeToggle" title="Toggle Theme">🌓</button>
+      <button class="tool-btn" data-tool="fullscreen" title="Fullscreen">⛶</button>
+    </div>
   </header>
 
+  <!-- DATABENTO USAGE PANEL -->
+  <div id="databentoUsagePanel" style="background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); border-bottom: 1px solid #30363d; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="color: #58a6ff; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 14px;">📊</span>
+        DATABENTO USAGE
+      </div>
+      <div style="height: 20px; width: 1px; background: #30363d;"></div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="color: #8b949e;">API Calls:</span>
+        <span id="databentoCallCount" style="color: #58a6ff; font-weight: bold; font-size: 12px;">0</span>
+      </div>
+      <div style="height: 20px; width: 1px; background: #30363d;"></div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="color: #8b949e;">Data Consumed:</span>
+        <span id="databentoDataUsed" style="color: #3fb950; font-weight: bold; font-size: 12px;">0.00 MB</span>
+        <span style="color: #6e7681;">/</span>
+        <span id="databentoDataLimit" style="color: #8b949e;">1000 MB</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="flex: 0 0 200px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; height: 12px; overflow: hidden; position: relative;">
+        <div id="databentoProgressBar" style="position: absolute; left: 0; top: 0; height: 100%; background: #3fb950; width: 0%; transition: width 0.3s, background 0.3s;"></div>
+      </div>
+      <div id="databentoUsagePercent" style="color: #3fb950; font-weight: bold; font-size: 12px; min-width: 45px; text-align: right;">0.0%</div>
+      <div style="height: 20px; width: 1px; background: #30363d;"></div>
+      <div style="color: #8b949e; font-size: 10px; display: flex; align-items: center; gap: 4px;">
+        <span>⏱️</span>
+        <span>Resets in <span id="databentoResetDays" style="color: #58a6ff; font-weight: bold;">--</span> days</span>
+      </div>
+    </div>
+  </div>
+
   <!-- MAIN GRID -->
-  <div id="layout">
+  <div id="layout" class="mentor-collapsed">
 
     <!-- CHART -->
     <canvas id="chart"></canvas>
 
+    <!-- Floating Orderflow Table -->
+    <div id="orderflowFloating" class="floating-panel" style="display:none;">
+      <div class="floating-header" id="orderflowDragHandle">
+        <span>🧊 Iceberg Orderflow</span>
+        <button id="orderflowExportBtn" class="floating-action" title="Export to CSV">📥</button>
+        <button id="orderflowClose" class="floating-close">✕</button>
+      </div>
+      <div id="orderflowTableFloating"></div>
+      
+      <!-- Date Range Export Panel (Hidden by default) -->
+      <div id="exportPanel" style="display:none; padding:12px; background:#0d1117; border-top:1px solid #30363d;">
+        <div style="margin-bottom:8px; font-size:11px; color:#8b949e;">Export Date Range:</div>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <div style="flex:1;">
+            <label style="font-size:10px; color:#6e7681;">Start Date</label>
+            <input type="datetime-local" id="exportStartDate" style="width:100%; padding:4px; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; border-radius:3px; font-size:11px;">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:10px; color:#6e7681;">End Date</label>
+            <input type="datetime-local" id="exportEndDate" style="width:100%; padding:4px; background:#0d1117; border:1px solid #30363d; color:#c9d1d9; border-radius:3px; font-size:11px;">
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button id="exportAllBtn" style="flex:1; padding:6px; background:#238636; border:1px solid #2ea043; color:#fff; border-radius:3px; cursor:pointer; font-size:11px; font-weight:600;">📥 Export All</button>
+          <button id="exportRangeBtn" style="flex:1; padding:6px; background:#1f6feb; border:1px solid #388bfd; color:#fff; border-radius:3px; cursor:pointer; font-size:11px; font-weight:600;">📥 Export Range</button>
+          <button id="exportCancelBtn" style="padding:6px 12px; background:#21262d; border:1px solid #30363d; color:#8b949e; border-radius:3px; cursor:pointer; font-size:11px;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw Orders Table Panel (NEW) -->
+    <div id="rawOrdersFloating" class="floating-panel" style="display:none; right:20px; top:80px; width:400px; height:600px; resize:both; overflow:hidden;">
+      <div class="floating-header" id="rawOrdersDragHandle" style="cursor:move;">
+        <span>📊 Raw Orders (Tick Level)</span>
+        <button id="rawOrdersClose" class="floating-close" style="cursor:pointer;">✕</button>
+      </div>
+      <div id="rawOrdersTable" style="overflow-y:auto; height:calc(100% - 32px);">
+        <div style="text-align:center; color:#666; padding:20px;">Waiting for orders...</div>
+      </div>
+      <div class="resize-handle" style="position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 0%, transparent 50%, #30363d 50%, #30363d 100%); border-bottom-right-radius:6px;"></div>
+    </div>
+
+    <!-- Position Management Panel (STEP 7) -->
+    <div id="positionPanel" style="position: absolute; top: 100px; right: 320px; z-index: 1000; display: none;"></div>
+
+    <!-- Position Add Form (STEP 7) -->
+    <div id="addPositionForm" style="position: absolute; top: 150px; right: 320px; z-index: 1001; display: none; background: rgba(0,0,0,0.95); padding: 20px; border-radius: 8px; color: white; border: 2px solid #3b82f6;">
+      <h3 style="margin: 0 0 15px 0; color: #fbbf24; font-size: 14px;">➕ Add Position</h3>
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 11px; color: #9ca3af;">Type:</label><br>
+        <select id="positionType" style="width: 100%; padding: 6px; background: #1f2937; color: white; border: 1px solid #374151; border-radius: 4px; margin-top: 3px;">
+          <option value="BUY">BUY (Long)</option>
+          <option value="SELL">SELL (Short)</option>
+        </select>
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 11px; color: #9ca3af;">Entry Price:</label><br>
+        <input type="number" id="positionEntry" step="0.01" placeholder="e.g. 2650.50" style="width: 100%; padding: 6px; background: #1f2937; color: white; border: 1px solid #374151; border-radius: 4px; margin-top: 3px;">
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 11px; color: #9ca3af;">Size (contracts):</label><br>
+        <input type="number" id="positionSize" step="0.1" value="1" placeholder="e.g. 1" style="width: 100%; padding: 6px; background: #1f2937; color: white; border: 1px solid #374151; border-radius: 4px; margin-top: 3px;">
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 11px; color: #9ca3af;">Stop Loss (optional):</label><br>
+        <input type="number" id="positionStopLoss" step="0.01" placeholder="e.g. 2640.00" style="width: 100%; padding: 6px; background: #1f2937; color: white; border: 1px solid #374151; border-radius: 4px; margin-top: 3px;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="font-size: 11px; color: #9ca3af;">Take Profit (optional):</label><br>
+        <input type="number" id="positionTakeProfit" step="0.01" placeholder="e.g. 2660.00" style="width: 100%; padding: 6px; background: #1f2937; color: white; border: 1px solid #374151; border-radius: 4px; margin-top: 3px;">
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="submitPosition()" style="flex: 1; background: #22c55e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Add Position</button>
+        <button onclick="cancelAddPosition()" style="flex: 1; background: #6b7280; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Cancel</button>
+      </div>
+    </div>
+
+    <!-- DOM Ladder Panel -->
+    <div id="domLadderPanel">
+      <h3>📊 DOM LADDER</h3>
+      <div id="domLadderContent">
+        <div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 11px; padding: 20px;">
+          Waiting for data...
+        </div>
+      </div>
+      <div id="institutionalAlerts" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;"></div>
+    </div>
+
     <!-- AI MENTOR PANEL -->
-    <div id="mentor">
+    <div id="mentor" class="collapsed">
       <h2>AI Mentor</h2>
+      
+      <!-- Tier Banner -->
+      <div id="tierBanner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; font-weight: 600; display: none;">
+        <div id="tierInfo">BASIC • BEGINNER</div>
+      </div>
+      
+      <!-- Mentor Signal -->
       <div id="mentorText">Waiting for market structure...</div>
       <div id="confidence"></div>
+      
+      <!-- Mentor Controls -->
+      <div id="mentorControls" style="margin-top: 12px; display: flex; gap: 8px;">
+        <button id="refreshSignal" class="mentor-btn" title="Refresh Signal">🔄 Refresh</button>
+        <button id="copySignal" class="mentor-btn" title="Copy Signal">📋 Copy</button>
+        <button id="markSignal" class="mentor-btn" title="Mark for Review">⭐ Mark</button>
+      </div>
+      
+      <!-- Guards Panel -->
+      <div id="guardsPanel" style="margin-top: 16px; padding: 10px; background: rgba(30,30,30,0.5); border-radius: 6px; display: none;">
+        <h3 style="font-size: 12px; color: #ff9f1c; margin-bottom: 8px; font-weight: 600;">🛡️ SAFETY GUARDS</h3>
+        <div id="guardsStatus"></div>
+        <button id="checkGuards" class="mentor-btn" style="margin-top: 8px; width: 100%;">Check Trade Allowed</button>
+      </div>
+      
+      <!-- Journal Panel -->
+      <div id="journalPanel" style="margin-top: 16px; padding: 10px; background: rgba(30,30,30,0.5); border-radius: 6px; display: none;">
+        <h3 style="font-size: 12px; color: #3fb950; margin-bottom: 8px; font-weight: 600;">📓 TRADE JOURNAL</h3>
+        <button id="logTrade" class="mentor-btn" style="width: 100%;">Log Trade</button>
+        <button id="viewJournal" class="mentor-btn" style="width: 100%; margin-top: 6px;">View Summary</button>
+        <div id="journalSummary" style="margin-top: 8px; font-size: 11px;"></div>
+      </div>
+      
+      <!-- Backtest Panel -->
+      <div id="backtestPanel" style="margin-top: 16px; padding: 10px; background: rgba(30,30,30,0.5); border-radius: 6px; display: none;">
+        <h3 style="font-size: 12px; color: #58a6ff; margin-bottom: 8px; font-weight: 600;">⏮️ BACKTEST</h3>
+        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+          <input type="date" id="backtestStart" style="flex: 1; padding: 4px; background: #161b22; color: #e0e0e0; border: 1px solid #30363d; border-radius: 3px; font-size: 11px;">
+          <input type="date" id="backtestEnd" style="flex: 1; padding: 4px; background: #161b22; color: #e0e0e0; border: 1px solid #30363d; border-radius: 3px; font-size: 11px;">
+        </div>
+        <button id="runBacktest" class="mentor-btn" style="width: 100%;">Run Backtest</button>
+        <div id="backtestResults" style="margin-top: 8px; font-size: 11px;"></div>
+      </div>
+      
     </div>
 
   </div>
 
 </div>
 
-<script src="chart.js"></script>
+<script src="api_client.js"></script>
+<script src="ui_controller.js"></script>
+<script src="chart.v4.js"></script>
 </body>
 </html>

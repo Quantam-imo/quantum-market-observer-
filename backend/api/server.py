@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import routes
 from backend.api.routes import router
+from backend.api.v2 import router as router_v2
 
 # ==================== FASTAPI APP INITIALIZATION ====================
 
@@ -34,13 +35,16 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+    # Allow local dev and Codespaces wildcard
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:5500",
         "http://localhost:8080",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:5500",
         "http://127.0.0.1:8080",
-        "file://",  # For local HTML/JS files
     ],
+    allow_origin_regex=r"https://.*\.app\.github\.dev",
     allow_credentials=True,
     allow_methods=["*"],
     expose_headers=["*"],
@@ -50,6 +54,7 @@ app.add_middleware(
 # ==================== ROUTE REGISTRATION ====================
 
 app.include_router(router)
+app.include_router(router_v2)
 
 
 # ==================== ROOT ENDPOINTS ====================
@@ -64,6 +69,12 @@ async def root():
         "docs": "/api/docs",
         "health": "/api/v1/health"
     }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Return empty response to avoid 404 noise for favicon requests."""
+    return JSONResponse(status_code=204, content=None)
 
 
 @app.get("/api")

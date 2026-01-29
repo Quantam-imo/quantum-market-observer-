@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+<canvas id="chart" width="800" height="600"></canvas>
+<canvas id="miniChart" width="120" height="35"></canvas>
+<div id="mentorText">Loading...</div>
+<div id="drawerContainer"></div>
+<script>
+console.log("Testing chart elements...");
+console.log("Chart canvas:", document.getElementById("chart"));
+console.log("Mini canvas:", document.getElementById("miniChart"));
+const canvas = document.getElementById("chart");
+if (canvas) {
+    const ctx = canvas.getContext("2d");
+    console.log("Canvas context:", ctx);
+    ctx.fillStyle = "red";
+    ctx.fillRect(10, 10, 100, 100);
+    console.log("✅ Test successful - red square should appear");
+} else {
+    console.error("❌ Canvas not found!");
+}
+</script>
+</body>
+</html>
